@@ -73,14 +73,14 @@ void render2DTree(Node* node, pcl::visualization::PCLVisualizer::Ptr& viewer, Bo
 }
 
 void Proximity(const std::vector<std::vector<float>>& points, int point_id, std::vector<int>& cluster,
-std::set<std::vector<float>>& processed, KdTree* tree, float distanceTol){
+std::vector<bool>& processed, KdTree* tree, float distanceTol){
 
-	processed.insert(points[point_id]); 
+	processed[point_id] = true; 
 	cluster.push_back(point_id); 
 
 	std::vector<int> close_by = tree -> search(points[point_id], distanceTol); 
 	for (int id : close_by){
-		if (processed.count(points[id]) == 0){
+		if (!processed[id]){
 			Proximity(points, id, cluster, processed, tree, distanceTol); 
 		}
 		
@@ -95,10 +95,10 @@ std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<flo
 	// TODO: Fill out this function to return list of indices for each cluster
 
 	std::vector<std::vector<int>> clusters;
-	std::set<std::vector<float>> processed; 
+	std::vector<bool> processed(points.size(), false); 
 
 	for (int id = 0; id < points.size(); ++id){
-		if (processed.count(points[id]) == 0){
+		if (!processed[id]){
 			std::vector<int> cluster;
 			Proximity(points, id, cluster, processed, tree, distanceTol); 
 			clusters.push_back(cluster); 
@@ -155,13 +155,13 @@ int main ()
   	// Render clusters
   	int clusterId = 0;
 	
-	std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(1,1, 0), Color(0,0,1)}; 
+	std::vector<Color> colors = {Color(1,0,0), Color(0,1,0), Color(1,1, 0)}; 
   	for(std::vector<int> cluster : clusters)
   	{
   		pcl::PointCloud<pcl::PointXYZ>::Ptr clusterCloud(new pcl::PointCloud<pcl::PointXYZ>());
   		for(int indice: cluster)
   			clusterCloud->points.push_back(pcl::PointXYZ(points[indice][0],points[indice][1],0));
-  		renderPointCloud(viewer, clusterCloud,"cluster"+std::to_string(clusterId),colors[clusterId%4]);
+  		renderPointCloud(viewer, clusterCloud,"cluster"+std::to_string(clusterId),colors[clusterId%3]);
   		++clusterId;
   	}
   	if(clusters.size()==0)
