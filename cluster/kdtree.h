@@ -16,11 +16,6 @@ struct Node
 	:	point(arr), id(setId), left(NULL), right(NULL)
 	{}
 
-	~Node()
-	{
-		delete left;
-		delete right;
-	}
 };
 
 struct KdTree
@@ -30,11 +25,6 @@ struct KdTree
 	KdTree()
 	: root(NULL)
 	{}
-
-	~KdTree()
-	{
-		delete root;
-	}
 
 	void insert_helper(Node** node, uint depth, int id, std::vector <float> point){
 
