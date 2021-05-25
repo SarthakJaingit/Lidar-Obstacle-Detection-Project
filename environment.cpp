@@ -3,6 +3,7 @@
 #include "processPointClouds.h"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
+#include <typeinfo>
 
 std::vector<Car> initHighway(bool renderScene, pcl::visualization::PCLVisualizer::Ptr& viewer)
 {
@@ -51,6 +52,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
     std::pair <pcl::PointCloud<pcl::PointXYZ>::Ptr, pcl::PointCloud<pcl::PointXYZ>::Ptr> segmentedCloud = (*point_processer).SegmentPlane(input_cloud, 100, 0.2);
     renderPointCloud(viewer, segmentedCloud.first, "road", Color(0, 1, 0)); 
 
+    // Clustering example with pcl library and cloud output.
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloud_cluster = point_processer -> Clustering(segmentedCloud.second, 2.5, 3, 30); 
 
     int cluster_id = 0; 
@@ -77,12 +79,37 @@ void cityBlock(pcl::visualization::PCLVisualizer::Ptr& viewer, ProcessPointCloud
     std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> filtered_cloud; 
     filtered_cloud = cityBlock_point_processor -> FilterCloud(input_Cloud, 0.3f, Eigen::Vector4f (-10, -6, -3, 1), Eigen::Vector4f (30, 7, 3, 1));
     
-    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmented_plane = cityBlock_point_processor -> SegmentPlane(
+    std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr, pcl::PointCloud<pcl::PointXYZI>::Ptr> segmented_plane = cityBlock_point_processor -> RansacModel(
         filtered_cloud.first, 
         10, 0.5
     ); 
 
-    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clusters = cityBlock_point_processor -> Clustering(segmented_plane.second, 0.8f, 10, 500); 
+    // Changed Clustering in this function to euclidian clustering
+    KdTree* kdtree (new KdTree()); 
+    // std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clusters = cityBlock_point_processor -> euclideanCluster(segmented_plane.second -> points, kdtree, 0.8f);
+    // Convert PointXYX to floating point 
+    std::vector<std::vector<float>> points; 
+    for (pcl::PointCloud<pcl::PointXYZI>::iterator it1 = segmented_plane.second -> begin(); it1 != segmented_plane.second -> end(); ++it1){
+        std::vector<float> new_point; 
+        new_point.push_back(it1 -> x); 
+        new_point.push_back(it1 -> y); 
+        new_point.push_back(it1 -> z); 
+
+        points.push_back(new_point); 
+    }
+
+    // Passing in points in some order and will be returned a vector of grouped indices
+    std::vector<std::vector<int>> clusters_indices = cityBlock_point_processor -> euclideanCluster(points, kdtree, 0.4f);
+    std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> clusters; 
+    for(std::vector<int> cluster : clusters_indices)
+    {
+        pcl::PointCloud<pcl::PointXYZI>::Ptr clusterCloud(new pcl::PointCloud<pcl::PointXYZI>());
+        for(int indice: cluster){
+            clusterCloud->points.push_back(pcl::PointXYZI(points[indice][0],points[indice][1],points[indice][2]));
+        }
+        clusters.push_back(clusterCloud); 
+    }
+
 
     std::vector<Color> colors = {Color(1, 0, 0), Color(0, 0, 1), Color(1, 1, 0), Color(0.5, 0.5, 0.5)}; 
     int cluster_id  = 0; 
@@ -135,7 +162,7 @@ int main (int argc, char** argv)
     std::cout << "starting enviroment" << std::endl;
 
     pcl::visualization::PCLVisualizer::Ptr viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    CameraAngle setAngle = FPS;
+    CameraAngle setAngle = TopDown;
     initCamera(setAngle, viewer);
 
     ProcessPointClouds<pcl::PointXYZI>* point_processor = new ProcessPointClouds<pcl::PointXYZI>; 

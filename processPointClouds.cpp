@@ -268,7 +268,8 @@ std::vector<typename pcl::PointCloud<PointT>::Ptr> ProcessPointClouds<PointT>::C
     return clusters;
 }
 
-void Proximity(const std::vector<std::vector<float>>& points, int point_id, std::vector<int>& cluster, std::vector<bool>& processed, KdTree* tree, float distanceTol){
+template<typename PointT>
+void ProcessPointClouds<PointT>::Proxim(const std::vector<std::vector<float>>& points, int point_id, std::vector<int>& cluster, std::vector<bool>& processed, KdTree* tree, float distanceTol){
 
 	processed[point_id] = true; 
 	cluster.push_back(point_id); 
@@ -276,15 +277,16 @@ void Proximity(const std::vector<std::vector<float>>& points, int point_id, std:
 	std::vector<int> close_by = tree -> search(points[point_id], distanceTol); 
 	for (int id : close_by){
 		if (!processed[id]){
-			Proximity(points, id, cluster, processed, tree, distanceTol); 
+			Proxim(points, id, cluster, processed, tree, distanceTol); 
 		}
 		
 	}
 
 }
 
+
 template<typename PointT>
-std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
+std::vector<std::vector<int>> ProcessPointClouds<PointT>::euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol)
 {
 
 	// TODO: Fill out this function to return list of indices for each cluster
@@ -295,7 +297,7 @@ std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<flo
 	for (int id = 0; id < points.size(); ++id){
 		if (!processed[id]){
 			std::vector<int> cluster;
-			Proximity(points, id, cluster, processed, tree, distanceTol); 
+			Proxim(points, id, cluster, processed, tree, distanceTol); 
 			clusters.push_back(cluster); 
 		}
 

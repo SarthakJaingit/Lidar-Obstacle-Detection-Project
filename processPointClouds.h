@@ -142,6 +142,8 @@ public:
 
     std::vector<typename pcl::PointCloud<PointT>::Ptr> Clustering(typename pcl::PointCloud<PointT>::Ptr cloud, float clusterTolerance, int minSize, int maxSize);
 
+    void Proxim(const std::vector<std::vector<float>>& points, int point_id, std::vector<int>& cluster, std::vector<bool>& processed, KdTree* tree, float distanceTol); 
+
     std::vector<std::vector<int>> euclideanCluster(const std::vector<std::vector<float>>& points, KdTree* tree, float distanceTol); 
 
     Box BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster);
@@ -153,8 +155,6 @@ public:
     std::vector<boost::filesystem::path> streamPcd(std::string dataPath);
   
 };
-
-void Proximity(const std::vector<std::vector<float>>& points, int point_id, std::vector<int>& cluster, std::vector<bool>& processed, KdTree* tree, float distanceTol);
 
 
 #endif /* PROCESSPOINTCLOUDS_H_ */
