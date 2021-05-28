@@ -166,7 +166,7 @@ int main (int argc, char** argv)
     initCamera(setAngle, viewer);
 
     ProcessPointClouds<pcl::PointXYZI>* point_processor = new ProcessPointClouds<pcl::PointXYZI>; 
-    std::vector<boost::filesystem::path> pcd_file_paths = point_processor -> streamPcd("/Users/vishal.jain/Documents/LidarProject/SFND_Lidar_Obstacle_Detection/src/sensors/data/pcd/data_2"); 
+    std::vector<boost::filesystem::path> pcd_file_paths = point_processor -> streamPcd("../src/sensors/data/pcd/data_1"); 
     auto stream_iterator(pcd_file_paths.begin()); 
     pcl::PointCloud<pcl::PointXYZI>::Ptr input_CloudI; 
 
